@@ -1,0 +1,8 @@
+name: similar-image-finder
+
+dependencies:
+  - python>=3.12
+  - anaconda
+  - pip
+  - pip:
+    - -r requirements.txt
