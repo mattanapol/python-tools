@@ -3,18 +3,19 @@ Try to find similar image of file 0001.jpg inside folder '/Volumes/CRUCIALSSD'
 ```
 python app.py ./0001.jpg '/Volumes/CRUCIALSSD' -t 95
 ```
-
-## Create new conda env
+or run with application to prompt input
 ```
-conda env create -f environment.yml
-```
-
-## Activate conda env
-```
-conda activate similar-image-finder
+python app.py
 ```
 
-## Remove conda env
+## Setup
+### Create venv with uv
 ```
-conda remove --name similar-image-finder --all
+uv venv
 ```
+
+### Activate venv
+```
+source .venv/bin/activate
+```
+

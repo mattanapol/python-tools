@@ -15,6 +15,8 @@ IMAGE_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.bmp', '.gif', '.tiff'}
 DEFAULT_HASH_SIZE = 64
 # Default name for the cache file
 DEFAULT_CACHE_FILE = '.image_hashes.pkl'
+# Default search folder
+DEFAULT_SEARCH_FOLDER = '/Volumes/CRUCIALSSD'
 
 def calculate_hash(image_path, hash_func=imagehash.phash):
     """
@@ -122,17 +124,66 @@ def main():
     parser = argparse.ArgumentParser(
         description="Find the first image in a folder similar to the input image."
     )
-    parser.add_argument("input_image", help="Path to the input image file.")
-    parser.add_argument("search_folder",
+    parser.add_argument("input_image", nargs='?', default=None, help="Path to the input image file.")
+    parser.add_argument("search_folder", nargs='?', default=None,
                         help="Path to the folder to search for similar images (includes subfolders).")
-    parser.add_argument("-t", "--threshold", type=float, default=90.0,
+    parser.add_argument("-t", "--threshold", type=float,
                         help="Similarity threshold percentage (0-100). 100 means identical hash. Default: 90.0.")
-    parser.add_argument("-c", "--concurrency", type=int, default=cpu_count() - 1,
+    parser.add_argument("-c", "--concurrency", type=int,
                         help=f"Number of concurrent processes to use for hashing. Defaults to CPU count ({cpu_count()}). Use 1 for sequential processing.")
-    parser.add_argument("--cache_file", type=str, default=None,
+    parser.add_argument("--cache_file", type=str,
                         help=f"Path to the cache file for storing image hashes. Defaults to '{DEFAULT_CACHE_FILE}' in the search folder.")
 
     args = parser.parse_args()
+
+    # If positional arguments were not provided via CLI, prompt the user
+    if args.input_image is None:
+        args.input_image = input("Enter the path to the input image file: ").strip()
+        if not args.input_image:
+            print("Error: Input image path cannot be empty.", file=sys.stderr)
+            sys.exit(1)
+
+    if args.search_folder is None:
+        args.search_folder = input(f"Enter the path to the folder to search for similar images[Default: '{DEFAULT_SEARCH_FOLDER}']: ").strip()
+        if args.search_folder:
+            args.search_folder = os.path.abspath(args.search_folder)
+        else:
+            args.search_folder = DEFAULT_SEARCH_FOLDER
+
+    # Prompt for optional arguments if not provided
+    if args.threshold is None:
+        threshold_input = input(f"Enter similarity threshold percentage (0-100) [Default: 90.0]: ").strip()
+        if threshold_input:
+            try:
+                args.threshold = float(threshold_input)
+            except ValueError:
+                print("Warning: Invalid threshold input. Using default 90.0.", file=sys.stderr)
+                args.threshold = 90.0
+        else:
+            args.threshold = 90.0 # Use default if input is empty
+
+    if args.concurrency is None:
+        concurrency_input = input(f"Enter number of concurrent processes [Default: {cpu_count() - 1}]: ").strip()
+        if concurrency_input:
+            try:
+                args.concurrency = int(concurrency_input)
+                if args.concurrency < 1:
+                     print("Warning: Concurrency must be at least 1. Using default.", file=sys.stderr)
+                     args.concurrency = cpu_count() - 1
+            except ValueError:
+                print(f"Warning: Invalid concurrency input. Using default {cpu_count() - 1}.", file=sys.stderr)
+                args.concurrency = cpu_count() - 1
+        else:
+            args.concurrency = cpu_count() - 1 # Use default if input is empty
+
+    if args.cache_file is None:
+        default_cache_path = os.path.join(args.search_folder, DEFAULT_CACHE_FILE)
+        cache_file_input = input(f"Enter path to cache file [Default: '{default_cache_path}' in search folder]: ").strip()
+        if cache_file_input:
+            args.cache_file = cache_file_input
+        else:
+            args.cache_file = default_cache_path
+
 
     # --- Input Validation ---
     if not os.path.isfile(args.input_image):
