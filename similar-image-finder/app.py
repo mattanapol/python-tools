@@ -120,7 +120,8 @@ def calculate_hash_wrapper(image_path):
     """Wrapper function for calculate_hash to return path along with hash."""
     return image_path, calculate_hash(image_path)
 
-def main():
+def parse_arguments():
+    """Parses command-line arguments and prompts user for missing values."""
     parser = argparse.ArgumentParser(
         description="Find the first image in a folder similar to the input image."
     )
@@ -184,7 +185,6 @@ def main():
         else:
             args.cache_file = default_cache_path
 
-
     # --- Input Validation ---
     if not os.path.isfile(args.input_image):
         print(f"Error: Input image not found: {args.input_image}")
@@ -193,6 +193,11 @@ def main():
     if not os.path.isdir(args.search_folder):
         print(f"Error: Search folder not found: {args.search_folder}")
         sys.exit(1)
+        
+    return args
+
+def find_similar_image(args):
+    """Finds the first image in a folder similar to the input image based on parsed arguments."""
 
     try:
         distance_threshold = convert_percent_to_distance(args.threshold)
@@ -285,6 +290,9 @@ def main():
         print(f"Scanned {processed_count} candidate files.")
         sys.exit(0) # Exit normally, indicating completion without a match
 
+def main():
+    args = parse_arguments()
+    find_similar_image(args)
 
 if __name__ == "__main__":
     main()
